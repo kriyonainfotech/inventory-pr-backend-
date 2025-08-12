@@ -1,4 +1,4 @@
-const Product = require("../model/Product");
+const Product = require("../model/product");
 
 // Create
 // Creates a new product using request body data
