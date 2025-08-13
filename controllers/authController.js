@@ -126,3 +126,31 @@ exports.getUserByEmail = async (req, res) => {
         res.status(500).json({ message: 'Server error', error: err.message });
     }
 };
+
+exports.getAllAdmins = async (req, res) => {
+    console.log('🔍 Fetching all users with role "Admin"...');
+    try {
+        const admins = await User.find({ role: 'Admin' });
+        if (!admins || admins.length === 0) {
+            console.warn('⚠️ No Admin users found.');
+            return res.status(404).json({
+                success: false,
+                message: 'No Admin users found',
+                admins: []
+            });
+        }
+        console.log(`✅ Found ${admins.length} Admin user(s).`);
+        res.status(200).json({
+            success: true,
+            message: 'Admins fetched successfully',
+            admins
+        });
+    } catch (err) {
+        console.error('❌ Error fetching admins:', err);
+        res.status(500).json({ 
+            success: false,
+            message: 'Server error while fetching admins', 
+            error: err && err.message ? err.message : 'Unknown error'
+        });
+    }
+};
