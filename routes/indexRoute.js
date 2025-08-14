@@ -6,6 +6,7 @@ router.use('/firm', require('./firmRoute'));
 router.use('/category', require('./categoryRoute'))
 router.use('/vendor', require('./vendorRoute'))
 router.use('/product', require('./productRoute'));
-router.use('/jobworker',require('./jobworkerRoute'))
+router.use('/jobworker', require('./jobworkerRoute'))
+router.use('/inventory', require('./inventoryRoute'));
 /// Jobworker? karu ok
 module.exports = router;
