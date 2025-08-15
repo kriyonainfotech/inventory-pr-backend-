@@ -261,3 +261,68 @@ exports.getInventoryById = async (req, res) => {
     }
 };
 
+
+// Assign Inventory API
+exports.assignInventory = async (req, res) => {
+    try {
+        const { inventoryId, assignedToType, assignedToId, quantity, firmId } = req.body;
+
+        // Validate input
+        if (!inventoryId || !assignedToType || !assignedToId || !quantity) {
+            return res.status(400).json({
+                success: false,
+                message: "inventoryId, assignedToType, assignedToId, and quantity are required"
+            });
+        }
+
+        if (!['employee', 'jobworker'].includes(assignedToType)) {
+            return res.status(400).json({
+                success: false,
+                message: "assignedToType must be either 'employee' or 'jobworker'"
+            });
+        }
+
+        // Find existing inventory log
+        const inventory = await Inventory.findById(inventoryId);
+        if (!inventory) {
+            return res.status(404).json({ success: false, message: "Inventory not found" });
+        }
+
+        // Check available stock
+        if (inventory.quantity < quantity) {
+            return res.status(400).json({ success: false, message: "Not enough stock" });
+        }
+
+        // Reduce stock in original inventory
+        inventory.quantity -= quantity;
+        await inventory.save();
+
+        // Create a new "assignment" log entry
+        const assignmentLog = new Inventory({
+            product: inventory.product,
+            quantity,
+            action: "assign", // matches your schema enum
+            firm: firmId || inventory.firm || null,
+            issuedBy: inventory.issuedBy || null,
+            employee: assignedToType === "employee" ? assignedToId : null,
+            jobworker: assignedToType === "jobworker" ? assignedToId : null,
+            status: "Pending"
+        });
+
+        await assignmentLog.save();
+
+        res.json({
+            success: true,
+            message: `Inventory assigned to ${assignedToType} successfully.`,
+            data: assignmentLog
+        });
+
+    } catch (error) {
+        console.error("🔥 Error assigning inventory:", error);
+        res.status(500).json({
+            success: false,
+            message: "Server error while assigning inventory",
+            error: error.message
+        });
+    }
+};
